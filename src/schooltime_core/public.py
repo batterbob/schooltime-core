@@ -245,7 +245,10 @@ def build_overview(raw: object) -> dict[str, object]:
         public_assignments.sort(key=lambda item: (item["due_bucket"] == "undated", item.get("due", "9999-12-31"), item["source_id"], item["course_title"], item["title"], item["id"]))
         children.append({"id": child["id"], "display_label": child["display_label"], "assignments": public_assignments})
     children.sort(key=lambda item: (item["display_label"], item["id"]))
-    return {"schema": SCHEMA_NAME, "version": SCHEMA_VERSION, "generated_at": snapshot["generated_at"], "timezone": snapshot["timezone"], "children": children}
+    result: dict[str, object] = {"schema": SCHEMA_NAME, "version": SCHEMA_VERSION, "generated_at": snapshot["generated_at"], "timezone": snapshot["timezone"], "children": children}
+    if "calendar" in snapshot:
+        result["calendar"] = deepcopy(snapshot["calendar"])
+    return result
 
 
 def build_detail(raw: object, detail_key: object) -> dict[str, object]:
