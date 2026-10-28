@@ -1,0 +1,1 @@
+{"schema":"schooltime_core_v1","version":1,"generated_at":"2026-11-01T09:00:00-05:00","timezone":"America/New_York","sources":{"ledger":{"display_label":"Ledger"}},"children":[{"id":"cedar","display_label":"Cedar","lanes":{"ledger":{"health":"current","courses":[]}}}],"calendar":{"days":[{"date":"2026-11-02","kind":"school"}]}}
