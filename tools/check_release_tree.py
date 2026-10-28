@@ -48,7 +48,11 @@ def main() -> int:
         if not denylist or not Path(denylist).is_file():
             print("FAIL private denylist rule")
             return 1
-        denied = [line.encode("utf-8") for line in Path(denylist).read_text(encoding="utf-8").splitlines() if line]
+        denied = [
+            term.encode("utf-8")
+            for line in Path(denylist).read_text(encoding="utf-8").splitlines()
+            if (term := line.strip()) and not term.startswith("#")
+        ]
     failed = False
     for name in tracked():
         path = PurePosixPath(name)
