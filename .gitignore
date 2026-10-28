@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+.tooling/
+.idea/
+.vscode/
+release-scan-*.json
