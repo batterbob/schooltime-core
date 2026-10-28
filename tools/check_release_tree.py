@@ -17,6 +17,21 @@ def tracked() -> list[str]:
     return [entry.decode("utf-8") for entry in result.stdout.split(b"\0") if entry]
 
 
+def reachable_blobs() -> list[str]:
+    objects = subprocess.run(["git", "rev-list", "--objects", "--all"], check=True, text=True, stdout=subprocess.PIPE).stdout.splitlines()
+    blobs: list[str] = []
+    for line in objects:
+        object_id = line.split(maxsplit=1)[0]
+        kind = subprocess.run(["git", "cat-file", "-t", object_id], check=True, text=True, stdout=subprocess.PIPE).stdout.strip()
+        if kind == "blob":
+            blobs.append(object_id)
+    return blobs
+
+
+def blob_data(object_id: str) -> bytes:
+    return subprocess.run(["git", "cat-file", "blob", object_id], check=True, stdout=subprocess.PIPE).stdout
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--generic", action="store_true")
@@ -49,8 +64,13 @@ def main() -> int:
             print(f"FAIL {name}: private denylist rule")
             failed = True
     if args.private:
-        blobs = subprocess.run(["git", "rev-list", "--objects", "--all"], check=True, text=True, stdout=subprocess.PIPE).stdout.splitlines()
-        print(f"private gate scanned {len(tracked())} tracked files and {len(blobs)} reachable objects")
+        blobs = reachable_blobs()
+        for object_id in blobs:
+            data = blob_data(object_id)
+            if any(term in data for term in denied):
+                print(f"FAIL object {object_id}: private denylist rule")
+                failed = True
+        print(f"private gate scanned {len(tracked())} tracked files and {len(blobs)} reachable blobs")
     return int(failed)
 
 
