@@ -1,0 +1,5 @@
+prune tests
+prune .github
+prune tools
+prune docs
+global-exclude __pycache__ *.py[cod]

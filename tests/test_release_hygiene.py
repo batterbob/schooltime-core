@@ -16,6 +16,6 @@ def test_tree_contains_only_public_material() -> None:
             continue
         assert path.suffix not in FORBIDDEN_SUFFIXES
         content = path.read_text(encoding="utf-8")
-        assert "/home/" not in content
-        assert "-----BEGIN " not in content
+        assert "/" + "home/" not in content
+        assert "-" * 5 + "BEGIN " not in content
         assert not re.search(r"\b(?:10|192\.168)\.\d+\.\d+\b", content)
