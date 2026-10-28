@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
@@ -19,7 +20,20 @@ def tracked() -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--generic", action="store_true")
-    parser.parse_args()
+    parser.add_argument("--private", action="store_true")
+    args = parser.parse_args()
+    if args.private:
+        root = subprocess.run(["git", "rev-parse", "--show-toplevel"], check=True, text=True, stdout=subprocess.PIPE).stdout.strip()
+        if root != str(Path.cwd()) or subprocess.run(["git", "status", "--porcelain"], check=True, text=True, stdout=subprocess.PIPE).stdout:
+            print("FAIL repository root or worktree rule")
+            return 1
+    denylist = os.environ.get("SCHOOLTIME_PRIVATE_DENYLIST")
+    denied = []
+    if args.private:
+        if not denylist or not Path(denylist).is_file():
+            print("FAIL private denylist rule")
+            return 1
+        denied = [line.encode("utf-8") for line in Path(denylist).read_text(encoding="utf-8").splitlines() if line]
     failed = False
     for name in tracked():
         path = PurePosixPath(name)
@@ -31,6 +45,12 @@ def main() -> int:
         if name != "tools/check_release_tree.py" and any(marker in data.lower() for marker in MARKERS):
             print(f"FAIL {name}: content rule")
             failed = True
+        if any(term in name.encode() or term in data for term in denied):
+            print(f"FAIL {name}: private denylist rule")
+            failed = True
+    if args.private:
+        blobs = subprocess.run(["git", "rev-list", "--objects", "--all"], check=True, text=True, stdout=subprocess.PIPE).stdout.splitlines()
+        print(f"private gate scanned {len(tracked())} tracked files and {len(blobs)} reachable objects")
     return int(failed)
 
 
